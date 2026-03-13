@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Dashboard Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            /* Vibrant Modern Palette - Violet & Slate */
+            --primary: #7c3aed; 
+            --primary-hover: #6d28d9; 
+            --primary-light: rgba(124, 58, 237, 0.1);
+            
+            /* Enhanced Light Mode Readability */
+            --bg-overlay: rgba(241, 245, 249, 0.45); 
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text: #0f172a; 
+            --text-muted: #64748b; 
+            --border: rgba(148, 163, 184, 0.1); 
+            
+            /* Status Colors */
+            --danger: #ef4444; 
+            --danger-hover: #dc2626;
+            --warning: #f59e0b; 
+            --info: #3b82f6; 
+            
+            /* Modal & Depth */
+            --modal-bg: rgba(0, 0, 0, 0.6);
+            --header-text: #1e293b; 
+            --header-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            
+            /* Smooth Shadows */
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        body.dark-mode {
+            --bg-overlay: rgba(15, 23, 42, 0.7); 
+            --card-bg: rgba(15, 23, 42, 0.75); 
+            --text: #f1f5f9; 
+            --text-muted: #94a3b8; 
+            --border: rgba(255, 255, 255, 0.08); 
+            --primary: #a78bfa; 
+            --primary-hover: #c4b5fd; 
+            --header-text: #ffffff;
+            --header-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        body {
+            font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+            margin: 0; padding: 0; color: var(--text); min-height: 100vh;
+            background-color: #0f172a; 
+            background-image: radial-gradient(at 0% 0%, #1e1b4b 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, #111827 0px, transparent 50%);
+            background-size: cover; background-position: center; background-attachment: fixed;
+            transition: color 0.3s, background-image 0.5s ease-in-out;
+            position: relative; overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--bg-overlay); z-index: -1; pointer-events: none; transition: background-color 0.3s ease;
+        }
+
+        /* Sleek Custom Scrollbars */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.6); }
+
+        .glass {
+            background: var(--card-bg); 
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--border); 
+            box-shadow: var(--glass-shadow);
+        }
+
+        /* SINGLE PAGE LAYOUT GRID */
+        .app-container {
+            max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem;
+            display: grid; grid-template-columns: 1fr; gap: 1.5rem;
+            transition: all 0.5s ease;
+        }
+        
+        @media (min-width: 850px) { 
+            body { overflow: hidden; } 
+            .app-container { 
+                grid-template-columns: 1.6fr 1fr; 
+                height: 100vh; box-sizing: border-box;
+                grid-template-rows: auto auto 1fr;
+            }
+            .top-nav { grid-column: 1 / -1; margin-bottom: 0; }
+            .dashboard-header { grid-column: 1 / -1; margin-bottom: 0; }
+            
+            .main-column { overflow: hidden; display: flex; flex-direction: column; }
+            .side-column { overflow: hidden; display: flex; flex-direction: column; }
+            #task-list { overflow-y: auto; flex-grow: 1; padding-right: 0.5rem; }
+            .scratchpad-container { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+            #scratchpad { flex-grow: 1; overflow-y: auto; padding-right: 0.5rem; }
+        }
+
+        /* ZEN MODE OVERRIDES */
+        body.zen-mode .zen-hide { display: none !important; opacity: 0; }
+        body.zen-mode .app-container { grid-template-columns: 1fr; max-width: 650px; }
+        .zen-only { display: none; text-align: center; margin-top: 2rem; padding: 2.5rem; border-radius: 1.25rem; }
+        body.zen-mode .zen-only { display: block; animation: fadeIn 1s ease-in-out; }
+        .zen-task-title { font-size: 2.25rem; font-weight: bold; margin-bottom: 0.25rem; color: var(--text); }
+        .zen-task-time { font-size: 1.1rem; color: var(--text-muted); font-weight: 500; }
+        .zen-task-countdown { font-size: 3.5rem; font-weight: 800; margin: 1rem 0; color: var(--primary); font-variant-numeric: tabular-nums; line-height: 1; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- DASHBOARD WIDGETS --- */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .nav-controls { display: flex; gap: 1rem; align-items: center; }
+
+        .pomodoro {
+            display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 1.25rem;
+            border-radius: 2rem; font-weight: bold; color: var(--text);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .pomo-btn, .icon-btn, .close-modal, .small-icon-btn {
+            background: none; border: none; padding: 0;
+            box-shadow: none !important; outline: none !important;
+            cursor: pointer; transition: transform 0.2s ease, color 0.2s ease;
+        }
+        
+        .pomo-btn { font-size: 1.15rem; color: var(--text); padding: 0 0.2rem; }
+        .pomo-btn:hover { transform: scale(1.1); }
+
+        .icon-btn { font-size: 1.5rem; color: var(--header-text); text-shadow: var(--header-shadow); }
+        .icon-btn:hover { transform: translateY(-2px) rotate(5deg); color: var(--primary); }
+
+        .dashboard-header { text-align: center; margin-bottom: 2rem; color: var(--header-text); text-shadow: var(--header-shadow); }
+        .greeting { font-size: 1.5rem; font-weight: 500; margin: 0 0 0.25rem 0; opacity: 0.95; letter-spacing: -0.5px; }
+        .clock { font-size: 4rem; font-weight: 800; letter-spacing: -2px; margin: 0; line-height: 1; }
+        .weather { font-size: 1.1rem; margin-top: 0.5rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--header-text); }
+
+        /* --- BUTTONS --- */
+        button {
+            background-color: var(--primary); color: white; border: none; padding: 0.75rem 1.5rem;
+            border-radius: 1rem; cursor: pointer; font-weight: 600; font-family: inherit; transition: all 0.2s; font-size: 0.95rem;
+            box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);
+        }
+        button:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 6px 10px -1px rgba(124, 58, 237, 0.3); }
+        button:active { transform: translateY(0); box-shadow: 0 2px 4px -1px rgba(124, 58, 237, 0.2); }
+        
+        button.secondary { background-color: transparent; color: var(--text); border: 1.5px solid var(--border); box-shadow: none; }
+        button.secondary:hover { background-color: var(--primary-light); border-color: var(--primary); color: var(--primary); box-shadow: none; transform: none; }
+
+        button.danger-outline { background-color: transparent; color: var(--danger); border: 1.5px solid var(--danger); box-shadow: none; }
+        button.danger-outline:hover { background-color: var(--danger); color: white; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2); transform: none; }
+
+        .close-modal:active, .icon-btn:active, .pomo-btn:active, .small-icon-btn:active { transform: none; }
+
+        /* --- INPUT GROUPS --- */
+        .input-group { padding: 1.25rem 1.5rem; border-radius: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .input-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .input-row > * { flex: 1; min-width: 140px; }
+        .input-row input[type="datetime-local"] { flex: 2; min-width: 200px; }
+        
+        select, input[type="text"], input[type="datetime-local"] {
+            padding: 0.7rem 1rem; border: 2px solid var(--border); border-radius: 1rem;
+            font-size: 0.95rem; font-family: inherit; background-color: rgba(255, 255, 255, 0.03); color: var(--text); font-weight: 500; width: 100%; box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        select option { background-color: var(--card-bg); color: var(--text); }
+        input::placeholder { color: var(--text-muted); font-weight: 400; opacity: 0.7; }
+        
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15); background-color: rgba(255, 255, 255, 0.06); }
+
+        .checkbox-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.5rem; }
+        .checkbox-row input[type="checkbox"] { width: 1.1rem; height: 1.1rem; accent-color: var(--primary); cursor: pointer; }
+        .checkbox-row label { font-size: 0.85rem; font-weight: 500; color: var(--text); cursor: pointer; }
+
+        #advanced-task-options { display: none; flex-direction: column; gap: 0.75rem; opacity: 0; transition: opacity 0.3s ease; }
+
+        /* --- SCRATCHPAD --- */
+        .scratchpad-container { padding: 1.5rem; border-radius: 1.25rem; }
+        .scratchpad-container h3 { margin-top: 0; font-size: 1.1rem; color: var(--primary); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+        textarea { background: transparent; border: none; resize: none; color: var(--text); font-family: inherit; font-size: 1rem; line-height: 1.6; outline: none; padding-top: 0.25rem; }
+
+        /* --- TASK LIST & PROGRESS --- */
+        .progress-bar-bg { width: 100%; height: 8px; background-color: rgba(128, 128, 128, 0.1); border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem; border: 1px solid var(--border); }
+        .progress-bar-fill { height: 100%; background-color: var(--primary); width: 0%; transition: width 0.4s ease; border-radius: 4px; }
+        .progress-text { font-size: 0.85rem; color: var(--header-text); text-align: right; text-shadow: var(--header-shadow); font-weight: 600; margin-bottom: 1rem;}
+
+        .task-list-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        .date-header { font-size: 0.95rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin: 0; font-weight: 800; }
+        .task-date-group { margin-top: 1.5rem; }
+        .task-date-group:first-child { margin-top: 0; }
+        
+        .task-item { padding: 1rem 1.25rem; border-radius: 1rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; transition: all 0.2s; border-left: none; }
+        
+        .priority-High { border: 1px solid rgba(239, 68, 68, 0.2); box-shadow: 0 4px 15px -2px rgba(239, 68, 68, 0.15); }
+        .priority-High strong { color: #ef4444; }
+        body.dark-mode .priority-High strong { color: #f87171; }
+        .priority-Medium { border: 1px solid rgba(245, 158, 11, 0.2); box-shadow: 0 4px 15px -2px rgba(245, 158, 11, 0.1); }
+        .priority-Low { border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 4px 15px -2px rgba(59, 130, 246, 0.1); }
+
+        .task-item.completed { opacity: 0.45; border: 1px solid var(--border) !important; box-shadow: none !important; }
+        .task-item.completed strong { text-decoration: line-through; color: var(--text-muted) !important; }
+
+        .task-info { display: flex; align-items: center; gap: 1rem; }
+        input[type="checkbox"] { width: 1.25rem; height: 1.25rem; cursor: pointer; accent-color: var(--primary); border-radius: 0.35rem; }
+        .task-text-container { display: flex; flex-direction: column; gap: 0.15rem; }
+        .task-text-container strong { font-size: 1rem; }
+        .task-time { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        
+        .cat-badge { padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .task-countdown { background-color: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); padding: 1px 6px; border-radius: 6px; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .task-actions { display: flex; gap: 0.25rem; }
+        .small-icon-btn { color: var(--text-muted); padding: 0.3rem 0.5rem; font-size: 1rem; border-radius: 0.5rem; transition: all 0.2s; }
+        .small-icon-btn:hover { color: var(--text); background: rgba(128,128,128,0.15); transform: none; }
+        .small-icon-btn.del:hover { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        /* --- TOAST & MODALS --- */
+        #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; display: flex; flex-direction: column; gap: 1rem; }
+        .toast { padding: 1.25rem 1.5rem; border-radius: 1rem; display: flex; flex-direction: column; gap: 0.9rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); animation: slideIn 0.35s ease-out forwards; width: 320px; }
+        .toast-header { font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.6rem; font-size: 1.15rem; }
+        .toast-body { font-size: 1rem; font-weight: 500; line-height: 1.5; color: var(--text); }
+        .toast-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 0.3rem; }
+        .toast-btn { padding: 0.5rem 1rem; font-size: 0.88rem; border-radius: 0.75rem; }
+        .toast-btn.done { background-color: #10b981; } .toast-btn.done:hover { background-color: #059669; }
+        .toast-btn.dismiss { background-color: transparent; color: var(--text); border: 1.5px solid var(--border); box-shadow: none; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(120%); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(120%); } }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--modal-bg); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 1rem; }
+        .modal.active { display: flex; }
+        .modal-content { padding: 2.5rem; border-radius: 1.5rem; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-header h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: var(--text); }
+        .close-modal { font-size: 1.75rem; color: var(--text-muted); transition: color 0.2s; }
+        .close-modal:hover { color: var(--text); transform: none; }
+        .settings-grid { display: flex; flex-direction: column; gap: 1.25rem; }
+        .settings-divider { height: 2px; background-color: var(--border); margin: 0.25rem 0; }
+        .settings-label { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 0.4rem; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="top-nav zen-hide">
+            <div class="pomodoro glass">
+                <span>⏱️</span>
+                <span id="pomo-display">25:00</span>
+                <button id="pomo-toggle" class="pomo-btn" title="Start/Pause">▶</button>
+                <button id="pomo-reset" class="pomo-btn" title="Reset">↻</button>
+            </div>
+            
+            <div class="nav-controls">
+                <button id="zen-toggle-btn" class="icon-btn" title="Focus Mode">🧘</button>
+                <button id="refresh-bg-btn" class="icon-btn" title="New Background">🔄</button>
+                <button id="open-settings-btn" class="icon-btn" title="Settings">⚙️</button>
+            </div>
+        </div>
+
+        <div class="dashboard-header zen-hide">
+            <h2 class="greeting" id="greeting">Good Morning</h2>
+            <h1 class="clock" id="clock">00:00</h1>
+            <div class="weather" id="weather">Fetching weather...</div>
+        </div>
+
+        <div class="main-column zen-hide">
+            <div class="input-group glass">
+                <h3 style="margin: 0; font-weight: 700; color: var(--primary); font-size: 1.1rem;">Add New Task</h3>
+                <input type="text" id="task-desc" placeholder="What needs to be done? Start typing to expand options...">
+                
+                <div id="advanced-task-options">
+                    <div class="input-row">
+                        <input type="datetime-local" id="task-date" title="Due Date">
+                        <select id="task-category" title="Category"></select>
+                    </div>
+                    
+                    <div class="input-row">
+                        <select id="task-priority" title="Priority Level">
+                            <option value="None">No Priority</option>
+                            <option value="Low">🔵 Low Priority</option>
+                            <option value="Medium">🟡 Medium Priority</option>
+                            <option value="High">🔴 High Priority</option>
+                        </select>
+                        <select id="task-recurrence" title="Repeat Task">
+                            <option value="None">Do not repeat</option>
+                            <option value="Daily">🔁 Repeat Daily</option>
+                            <option value="Weekly">🔁 Repeat Weekly</option>
+                            <option value="Monthly">🔁 Repeat Monthly</option>
+                        </select>
+                    </div>
+
+                    <div class="checkbox-row countdown-setting-row" style="display: none;">
+                        <input type="checkbox" id="task-countdown-check">
+                        <label for="task-countdown-check">Show live countdown on task</label>
+                    </div>
+
+                    <button id="add-task-btn" style="margin-top: 0.25rem;">Add Task</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+                <div class="progress-text" id="progress-text">0/0 tasks completed today</div>
+            </div>
+
+            <div id="task-list"></div>
+        </div>
+
+        <div class="side-column zen-hide">
+            <div class="scratchpad-container glass">
+                <h3>Scratchpad 📝 <span id="save-indicator" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;"></span></h3>
+                <textarea id="scratchpad" placeholder="Jot down quick thoughts, links, or numbers here... Auto-saves instantly."></textarea>
+            </div>
+        </div>
+
+        <div class="zen-only glass" id="zen-view">
+            <p style="color: var(--text-muted); font-weight: bold; margin-top: 0; text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem;">Focusing On</p>
+            <div id="zen-task-content"></div>
+            <button class="secondary" id="exit-zen-btn" style="margin-top: 2.5rem; width: 100%;">Exit Focus Mode</button>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2>Control Panel</h2>
+                <button id="close-settings-btn" class="close-modal">&times;</button>
+            </div>
+            
+            <div class="settings-grid">
+                <div>
+                    <label class="settings-label">Display Name</label>
+                    <input type="text" id="name-input" placeholder="Your Name">
+                </div>
+                
+                <div>
+                    <label class="settings-label">Manual Weather City (Leave blank for GPS)</label>
+                    <input type="text" id="city-input" placeholder="e.g. London, GB">
+                </div>
+                <button id="save-settings-btn" style="width: 100%;">Save Changes</button>
+
+                <div class="settings-divider"></div>
+                
+                <div>
+                    <label class="settings-label">Custom Task Categories</label>
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <input type="text" id="new-category-input" placeholder="New tag name...">
+                        <button id="add-category-btn" class="secondary" style="padding: 0.5rem 1rem;">Add</button>
+                    </div>
+                    <div id="category-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <label class="settings-label">Countdowns & Alerts</label>
+                <button id="global-countdown-toggle" class="secondary" style="width: 100%; text-align: left;">⏳ Global Countdowns: OFF</button>
+                <button id="auto-countdown-toggle" class="secondary" style="width: 100%; text-align: left; display: none;">⚙️ Auto-enable on new tasks: OFF</button>
+                <button id="enable-notif-btn" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">🔔 Request Desktop Notifications</button>
+                <button id="sound-toggle" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">🔊 Sound Effects: ON</button>
+                
+                <div class="settings-divider"></div>
+
+                <label class="settings-label">Appearance</label>
+                <button id="theme-toggle" class="secondary" style="width: 100%; text-align: left;">☀️ Interface Theme</button>
+                <button id="time-bg-toggle" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">🌅 Time-Based Wallpapers: OFF</button>
+                
+                <div class="settings-divider"></div>
+                
+                <div style="display: flex; gap: 0.75rem;">
+                    <button id="export-btn" class="secondary" style="flex: 1;">💾 Backup</button>
+                    <button id="import-btn" class="secondary" style="flex: 1;">📂 Restore</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                </div>
+                <button id="reset-btn" class="danger-outline" style="width: 100%;">🗑️ Reset All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2>Update Task</h2>
+                <button id="close-edit-btn" class="close-modal">&times;</button>
+            </div>
+            <div class="settings-grid">
+                <input type="hidden" id="edit-task-id">
+                
+                <div>
+                    <label class="settings-label">Description</label>
+                    <input type="text" id="edit-task-desc">
+                </div>
+
+                <div class="input-row">
+                    <div style="flex: 1;">
+                        <label class="settings-label">Due Date</label>
+                        <input type="datetime-local" id="edit-task-date">
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="settings-label">Category</label>
+                        <select id="edit-task-category"></select>
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <div style="flex: 1;">
+                        <label class="settings-label">Priority</label>
+                        <select id="edit-task-priority">
+                            <option value="None">No Priority</option>
+                            <option value="Low">🔵 Low</option>
+                            <option value="Medium">🟡 Medium</option>
+                            <option value="High">🔴 High</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="settings-label">Recurrence</label>
+                        <select id="edit-task-recurrence">
+                            <option value="None">No Repeat</option>
+                            <option value="Daily">🔁 Daily</option>
+                            <option value="Weekly">🔁 Weekly</option>
+                            <option value="Monthly">🔁 Monthly</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="checkbox-row countdown-setting-row" style="display: none; margin-top: 0.5rem;">
+                    <input type="checkbox" id="edit-task-countdown-check">
+                    <label for="edit-task-countdown-check">Show live countdown on task</label>
+                </div>
+
+                <button id="save-edit-btn" style="width: 100%; margin-top: 1rem;">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- STATE & INITIALIZATION (MOVED TO VERY TOP TO PREVENT ERRORS) ---
+        const todayDateStr = new Date().toISOString().split('T')[0];
+        let currentBgSeed = localStorage.getItem('bg-seed') || todayDateStr;
+        let userName = localStorage.getItem('dashboard-name') || '';
+        let manualCity = localStorage.getItem('dashboard-city') || '';
+        
+        let soundEnabled = localStorage.getItem('dashboard-sound') !== 'false';
+        let globalCountdownEnabled = localStorage.getItem('dashboard-countdowns') === 'true';
+        let autoCountdownEnabled = localStorage.getItem('dashboard-auto-countdown') === 'true';
+        let timeBasedBgEnabled = localStorage.getItem('dashboard-time-bg') === 'true';
+        
+        let lastKnownTimeBlock = ''; 
+        let timeBgIndex = parseInt(localStorage.getItem('time-bg-index')) || 0; 
+        
+        let isZenMode = false;
+        let zenNextTaskTime = null; 
+
+        // Safe JSON parsing for user data
+        let tasks = [];
+        try { const t = JSON.parse(localStorage.getItem('todo-tasks')); if (Array.isArray(t)) tasks = t; } catch(e) {}
+        
+        let customCategories = ['Personal', 'Work', 'Study', 'Errands'];
+        try { const c = JSON.parse(localStorage.getItem('dashboard-categories')); if (Array.isArray(c)) customCategories = c; } catch(e) {}
+
+        // --- CUSTOM CATEGORIES & TAGS ---
+        function stringToColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            const h = Math.abs(hash % 360);
+            return `hsl(${h}, 65%, 45%)`; 
+        }
+
+        function renderCategorySettings() {
+            const list = document.getElementById('category-list');
+            list.innerHTML = '';
+            customCategories.forEach((cat, index) => {
+                const span = document.createElement('span');
+                span.className = 'cat-badge';
+                span.style.backgroundColor = stringToColor(cat);
+                span.style.display = 'flex'; span.style.alignItems = 'center'; span.style.gap = '6px'; span.style.fontSize = '0.75rem';
+                span.innerHTML = `${cat} <span style="cursor:pointer; font-weight:bold; font-size:0.9rem;" onclick="deleteCategory(${index})">&times;</span>`;
+                list.appendChild(span);
+            });
+            updateCategoryDropdowns();
+        }
+
+        function updateCategoryDropdowns() {
+            const addSelect = document.getElementById('task-category');
+            const editSelect = document.getElementById('edit-task-category');
+            let opts = customCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+            if(!opts) opts = `<option value="None">None</option>`;
+            addSelect.innerHTML = opts; editSelect.innerHTML = opts;
+        }
+
+        window.deleteCategory = (idx) => {
+            customCategories.splice(idx, 1);
+            localStorage.setItem('dashboard-categories', JSON.stringify(customCategories));
+            renderCategorySettings(); renderTasks(); 
+        };
+
+        document.getElementById('add-category-btn').addEventListener('click', () => {
+            const val = document.getElementById('new-category-input').value.trim();
+            if(val && !customCategories.includes(val)) {
+                customCategories.push(val);
+                localStorage.setItem('dashboard-categories', JSON.stringify(customCategories));
+                document.getElementById('new-category-input').value = '';
+                renderCategorySettings();
+            }
+        });
+        renderCategorySettings(); 
+
+        // --- AUDIO FEEDBACK ---
+        function playDing() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime); 
+                gain.gain.setValueAtTime(0.08, ctx.currentTime); 
+                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.3); 
+                osc.start(); osc.stop(ctx.currentTime + 0.3);
+            } catch (e) {}
+        }
+
+        const soundToggleBtn = document.getElementById('sound-toggle');
+        soundToggleBtn.textContent = soundEnabled ? '🔊 Sound Effects: ON' : '🔇 Sound Effects: OFF';
+        soundToggleBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled; localStorage.setItem('dashboard-sound', soundEnabled);
+            soundToggleBtn.textContent = soundEnabled ? '🔊 Sound Effects: ON' : '🔇 Sound Effects: OFF';
+            if(soundEnabled) playDing();
+        });
+
+        // --- COUNTDOWN SETTINGS ---
+        const countdownToggleBtn = document.getElementById('global-countdown-toggle');
+        const autoCountdownToggleBtn = document.getElementById('auto-countdown-toggle');
+        const countdownRows = document.querySelectorAll('.countdown-setting-row');
+
+        function updateGlobalCountdownUI() {
+            countdownToggleBtn.textContent = globalCountdownEnabled ? '⏳ Global Countdowns: ON' : '⏳ Global Countdowns: OFF';
+            countdownRows.forEach(row => row.style.display = globalCountdownEnabled ? 'flex' : 'none');
+            
+            autoCountdownToggleBtn.style.display = globalCountdownEnabled ? 'block' : 'none';
+            autoCountdownToggleBtn.textContent = autoCountdownEnabled ? '⚙️ Auto-enable on new tasks: ON' : '⚙️ Auto-enable on new tasks: OFF';
+            document.getElementById('task-countdown-check').checked = (globalCountdownEnabled && autoCountdownEnabled);
+        }
+        updateGlobalCountdownUI();
+
+        countdownToggleBtn.addEventListener('click', () => {
+            globalCountdownEnabled = !globalCountdownEnabled; localStorage.setItem('dashboard-countdowns', globalCountdownEnabled);
+            updateGlobalCountdownUI(); renderTasks(); 
+        });
+
+        autoCountdownToggleBtn.addEventListener('click', () => {
+            autoCountdownEnabled = !autoCountdownEnabled; localStorage.setItem('dashboard-auto-countdown', autoCountdownEnabled);
+            updateGlobalCountdownUI();
+        });
+
+        // --- BACKGROUND IMAGE MANAGER ---
+        const timeBgToggleBtn = document.getElementById('time-bg-toggle');
+        const curatedBgs = {
+            Morning: [
+                'https://images.unsplash.com/photo-1470252649478-62d44faea302?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1423784346385-c1d4dac9893a?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1500382017468-9049be7fa0e5?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1445264718234-9620ba0dc937?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1470071131384-001b85755b36?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1414445092028-568eb2a7925e?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1438786657495-640937046d18?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1542273917363-3b1817f50a24?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1506260408121-e353d10b87c7?q=80&w=1920&auto=format&fit=crop'
+            ],
+            Afternoon: [
+                'https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1447752809965-011a110bb527?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1473496169904-6a58ba51034a?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1458668383970-45f815e1bc56?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1500530855697-b586d8e0f56e?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1426604908151-37d6f4c80cb9?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1475924156734-4985b80ae605?q=80&w=1920&auto=format&fit=crop'
+            ],
+            Evening: [
+                'https://images.unsplash.com/photo-1472141521881-9550ce991b1a?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1495616811223-4d98c6e1284a?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1506744032085-e51c8e11ee90?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1505322022379-7c3353ee6291?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1470240731273-78816624f216?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1418065460487-3ce7e600570b?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1494548162494-384bba4ab999?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1465188162913-8fb570db751e?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1431416615050-c8f2537a892b?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1511497584789-8755024e1329?q=80&w=1920&auto=format&fit=crop'
+            ],
+            Night: [
+                'https://images.unsplash.com/photo-1507400492013-162706c8c05e?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1478769027896-1051ac1d0f50?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1488866022504-f2584929ca5f?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1513628253939-010e64ac66cd?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1435820465220-410a8d7120fb?q=80&w=1920&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1505506874779-b1433abf4e7e?q=80&w=1920&auto=format&fit=crop', 'https://images.unsplash.com/photo-1445905595283-214c483a9fa0?q=80&w=1920&auto=format&fit=crop'
+            ]
+        };
+
+        function getTimeBlock() {
+            const hour = new Date().getHours();
+            if (hour >= 6 && hour < 12) return 'Morning';
+            if (hour >= 12 && hour < 17) return 'Afternoon';
+            if (hour >= 17 && hour < 20) return 'Evening';
+            return 'Night';
+        }
+
+        function updateTimeBgToggleUI() { timeBgToggleBtn.textContent = timeBasedBgEnabled ? '🌅 Time-Based Wallpapers: ON' : '🌅 Time-Based Wallpapers: OFF'; }
+        updateTimeBgToggleUI();
+
+        timeBgToggleBtn.addEventListener('click', () => {
+            timeBasedBgEnabled = !timeBasedBgEnabled; localStorage.setItem('dashboard-time-bg', timeBasedBgEnabled);
+            updateTimeBgToggleUI(); applyBackground(); 
+        });
+
+        function applyBackground() {
+            let imgUrl = '';
+            if (timeBasedBgEnabled) {
+                const timeBlock = getTimeBlock(); lastKnownTimeBlock = timeBlock;
+                const array = curatedBgs[timeBlock]; imgUrl = array[timeBgIndex % array.length];
+            } else { imgUrl = `https://picsum.photos/seed/${currentBgSeed}/1920/1080?blur=2`; }
+
+            const img = new Image();
+            img.onload = () => { document.body.style.backgroundImage = `url('${imgUrl}'), radial-gradient(at 0% 0%, #1e1b4b 0px, transparent 50%), radial-gradient(at 100% 100%, #111827 0px, transparent 50%)`; };
+            img.src = imgUrl;
+        }
+        applyBackground(); 
+
+        document.getElementById('refresh-bg-btn').addEventListener('click', () => {
+            if (timeBasedBgEnabled) {
+                const timeBlock = getTimeBlock(); const array = curatedBgs[timeBlock];
+                timeBgIndex = (timeBgIndex + 1) % array.length; localStorage.setItem('time-bg-index', timeBgIndex);
+            } else {
+                currentBgSeed = Math.random().toString(36).substring(2, 8); localStorage.setItem('bg-seed', currentBgSeed);
+            }
+            applyBackground();
+        });
+
+        // --- CLOCK & GREETING ---
+        const clockElement = document.getElementById('clock');
+        const greetingElement = document.getElementById('greeting');
+        
+        function updateClock() {
+            const now = new Date();
+            clockElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const timeBlock = getTimeBlock();
+            greetingElement.textContent = `Good ${timeBlock}${userName ? ', ' + userName : ''}`;
+            
+            if (timeBasedBgEnabled && timeBlock !== lastKnownTimeBlock && lastKnownTimeBlock !== '') {
+                timeBgIndex = 0; localStorage.setItem('time-bg-index', timeBgIndex); applyBackground();
+            }
+            
+            updateLiveCountdowns();
+            updateZenCountdown();
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        // --- LIVE COUNTDOWN LOGIC ---
+        function formatCountdown(targetTime) {
+            const diffMs = targetTime - Date.now();
+            if (diffMs <= 0) return "Due!";
+            const totalMins = Math.floor(diffMs / 60000);
+            if (totalMins < 60) return `in ${totalMins}m`;
+            const hours = Math.floor(totalMins / 60);
+            const mins = totalMins % 60;
+            if (hours < 24) return `in ${hours}h ${mins}m`;
+            const days = Math.floor(hours / 24);
+            const remainingHours = hours % 24;
+            return `in ${days}d ${remainingHours}h`;
+        }
+
+        function updateLiveCountdowns() {
+            if(!globalCountdownEnabled) return;
+            document.querySelectorAll('.task-countdown').forEach(el => {
+                const time = parseInt(el.getAttribute('data-time'));
+                el.textContent = formatCountdown(time);
+            });
+        }
+
+        // --- WEATHER ---
+        const weatherElement = document.getElementById('weather');
+        function getWeatherIcon(code) {
+            if (code === 0) return '☀️'; if (code > 0 && code < 4) return '⛅';
+            if (code >= 45 && code <= 48) return '🌫️'; if (code >= 51 && code <= 67) return '🌧️';
+            if (code >= 71 && code <= 77) return '❄️'; if (code >= 95) return '⛈️'; return '🌡️';
+        }
+
+        async function fetchWeatherByCoords(lat, lon, cityName = "") {
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                const data = await res.json();
+                weatherElement.textContent = `${getWeatherIcon(data.current_weather.weathercode)} ${Math.round(data.current_weather.temperature)}°C ${cityName ? `in ${cityName}` : ''}`;
+            } catch { weatherElement.textContent = "Weather unavailable"; }
+        }
+
+        async function updateWeather() {
+            weatherElement.textContent = "Fetching weather...";
+            if (manualCity) {
+                try {
+                    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(manualCity)}&count=1`);
+                    const data = await res.json();
+                    if (data.results && data.results.length > 0) {
+                        fetchWeatherByCoords(data.results[0].latitude, data.results[0].longitude, data.results[0].name); return;
+                    } else { weatherElement.textContent = "City not found"; return; }
+                } catch { weatherElement.textContent = "Geocoding error"; return; }
+            }
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
+                    () => weatherElement.textContent = "📍 Add city in settings for weather"
+                );
+            } else { weatherElement.textContent = "Weather not supported"; }
+        }
+        updateWeather();
+
+        // --- SCRATCHPAD ---
+        const scratchpad = document.getElementById('scratchpad');
+        const saveInd = document.getElementById('save-indicator');
+        let saveTimeout;
+        scratchpad.value = localStorage.getItem('dashboard-scratchpad') || '';
+        scratchpad.addEventListener('input', () => {
+            saveInd.textContent = "Saving..."; clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => { localStorage.setItem('dashboard-scratchpad', scratchpad.value); saveInd.textContent = "Saved"; setTimeout(() => saveInd.textContent = "", 2000); }, 500);
+        });
+
+        // --- POMODORO ---
+        const pomoDisplay = document.getElementById('pomo-display');
+        let pomoTimeLeft = 25 * 60; let pomoInterval = null; let isPomoRunning = false;
+        function updatePomo() { pomoDisplay.textContent = `${Math.floor(pomoTimeLeft / 60).toString().padStart(2, '0')}:${(pomoTimeLeft % 60).toString().padStart(2, '0')}`; }
+        document.getElementById('pomo-toggle').addEventListener('click', (e) => {
+            if (isPomoRunning) { clearInterval(pomoInterval); e.target.textContent = '▶'; } 
+            else {
+                e.target.textContent = '⏸';
+                pomoInterval = setInterval(() => {
+                    if (pomoTimeLeft > 0) { pomoTimeLeft--; updatePomo(); } 
+                    else {
+                        clearInterval(pomoInterval); isPomoRunning = false; e.target.textContent = '▶'; playDing();
+                        if ("Notification" in window && Notification.permission === "granted") new Notification("Pomodoro Finished!", { body: "Time for a break." });
+                        alert("Pomodoro complete!");
+                    }
+                }, 1000);
+            }
+            isPomoRunning = !isPomoRunning;
+        });
+        document.getElementById('pomo-reset').addEventListener('click', () => { clearInterval(pomoInterval); isPomoRunning = false; pomoTimeLeft = 25 * 60; document.getElementById('pomo-toggle').textContent = '▶'; updatePomo(); });
+
+        // --- ZEN MODE (FOCUS) ---
+        const zenToggleBtn = document.getElementById('zen-toggle-btn');
+        const exitZenBtn = document.getElementById('exit-zen-btn');
+        const zenTaskContent = document.getElementById('zen-task-content');
+
+        function updateZenView() {
+            const incompleteTasks = tasks.filter(t => !t.completed).sort((a, b) => {
+                const pWeights = { 'High': 3, 'Medium': 2, 'Low': 1, 'None': 0, undefined: 0 };
+                const wA = pWeights[a.priority] || 0; const wB = pWeights[b.priority] || 0;
+                if (wA !== wB) return wB - wA; return a.datetime - b.datetime;
+            });
+            
+            if (incompleteTasks.length > 0) {
+                const next = incompleteTasks[0];
+                zenNextTaskTime = next.datetime; 
+                const timeString = new Date(next.datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', weekday:'short'});
+                
+                zenTaskContent.innerHTML = `
+                    <div class="zen-task-title">${next.desc}</div>
+                    <div class="zen-task-time">Scheduled: ${timeString}</div>
+                    <div id="zen-task-countdown" class="zen-task-countdown"></div>
+                `;
+                updateZenCountdown(); 
+            } else {
+                zenNextTaskTime = null;
+                zenTaskContent.innerHTML = `<div class="zen-task-title">List complete!</div><div class="zen-task-time">Take a well-deserved break.</div>`;
+            }
+        }
+
+        function updateZenCountdown() {
+            if (!isZenMode || !zenNextTaskTime) return;
+            const el = document.getElementById('zen-task-countdown');
+            if (!el) return;
+
+            const diffMs = zenNextTaskTime - Date.now();
+            if (diffMs <= 0) {
+                el.textContent = "DUE NOW"; el.style.color = "var(--danger)";
+            } else {
+                el.style.color = "var(--primary)";
+                const h = Math.floor(diffMs / 3600000);
+                const m = Math.floor((diffMs % 3600000) / 60000).toString().padStart(2, '0');
+                const s = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                el.textContent = `${h > 0 ? h + ':' : ''}${m}:${s}`;
+            }
+        }
+
+        function toggleZenMode() {
+            isZenMode = !isZenMode;
+            if (isZenMode) { updateZenView(); document.body.classList.add('zen-mode'); } 
+            else { document.body.classList.remove('zen-mode'); }
+        }
+        zenToggleBtn.addEventListener('click', toggleZenMode);
+        exitZenBtn.addEventListener('click', toggleZenMode);
+
+        // --- DYNAMIC TASK INPUT ---
+        const taskDescInput = document.getElementById('task-desc');
+        const advOptions = document.getElementById('advanced-task-options');
+
+        taskDescInput.addEventListener('input', (e) => {
+            if (e.target.value.trim().length > 0) {
+                advOptions.style.display = 'flex'; setTimeout(() => advOptions.style.opacity = '1', 10);
+            } else {
+                advOptions.style.opacity = '0'; setTimeout(() => advOptions.style.display = 'none', 300);
+            }
+        });
+
+        // --- TASK LOGIC ---
+        function saveTasks() { localStorage.setItem('todo-tasks', JSON.stringify(tasks)); if(isZenMode) updateZenView(); }
+
+        document.getElementById('add-task-btn').addEventListener('click', () => {
+            const desc = taskDescInput.value.trim();
+            const dateVal = document.getElementById('task-date').value;
+            const catVal = document.getElementById('task-category').value;
+            const prioVal = document.getElementById('task-priority').value;
+            const recVal = document.getElementById('task-recurrence').value;
+            const showCountdown = document.getElementById('task-countdown-check').checked;
+            
+            if (!desc || !dateVal) return alert("Please enter task details and a valid date.");
+            tasks.push({ 
+                id: Date.now(), desc, datetime: new Date(dateVal).getTime(), 
+                category: catVal, priority: prioVal, recurrence: recVal, 
+                showCountdown: showCountdown, notified: false, completed: false, spawnedNext: false 
+            });
+            
+            saveTasks(); renderTasks();
+            taskDescInput.value = ''; document.getElementById('task-date').value = '';
+            document.getElementById('task-countdown-check').checked = (globalCountdownEnabled && autoCountdownEnabled);
+            advOptions.style.opacity = '0'; setTimeout(() => advOptions.style.display = 'none', 300);
+        });
+
+        window.deleteTask = id => { tasks = tasks.filter(t => t.id !== id); saveTasks(); renderTasks(); };
+        
+        function generateNextOccurrence(task) {
+            const nextDate = new Date(task.datetime);
+            if (task.recurrence === 'Daily') nextDate.setDate(nextDate.getDate() + 1);
+            else if (task.recurrence === 'Weekly') nextDate.setDate(nextDate.getDate() + 7);
+            else if (task.recurrence === 'Monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+
+            tasks.push({
+                id: Date.now() + Math.floor(Math.random() * 1000), desc: task.desc, datetime: nextDate.getTime(),
+                category: task.category, priority: task.priority, recurrence: task.recurrence, showCountdown: task.showCountdown,
+                notified: false, completed: false, spawnedNext: false
+            });
+        }
+
+        window.toggleTaskComplete = id => {
+            const t = tasks.find(t => t.id === id);
+            if (t) {
+                t.completed = !t.completed;
+                if (t.completed) {
+                    playDing(); confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#7c3aed', '#10b981', '#f59e0b'] });
+                    if (t.recurrence && t.recurrence !== 'None' && !t.spawnedNext) { generateNextOccurrence(t); t.spawnedNext = true; }
+                }
+                saveTasks(); renderTasks();
+            }
+        };
+
+        window.rolloverTasks = () => {
+            const now = Date.now(); const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+            let updated = false;
+            tasks.forEach(t => { if (!t.completed && t.datetime < startOfToday.getTime()) { t.datetime = now + 3600000; t.notified = false; updated = true; } });
+            if (updated) { saveTasks(); renderTasks(); } else alert("All caught up!");
+        };
+
+        const editModal = document.getElementById('edit-modal');
+        window.openEditModal = id => {
+            const t = tasks.find(t => t.id === id);
+            if(t) {
+                document.getElementById('edit-task-id').value = t.id; document.getElementById('edit-task-desc').value = t.desc;
+                const d = new Date(t.datetime); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                document.getElementById('edit-task-date').value = d.toISOString().slice(0,16);
+                document.getElementById('edit-task-category').value = t.category || "None";
+                document.getElementById('edit-task-priority').value = t.priority || "None";
+                document.getElementById('edit-task-recurrence').value = t.recurrence || "None";
+                document.getElementById('edit-task-countdown-check').checked = t.showCountdown || false;
+                editModal.classList.add('active');
+            }
+        };
+        
+        document.getElementById('close-edit-btn').addEventListener('click', () => editModal.classList.remove('active'));
+        document.getElementById('save-edit-btn').addEventListener('click', () => {
+            const id = parseInt(document.getElementById('edit-task-id').value);
+            const t = tasks.find(t => t.id === id);
+            if(t) {
+                t.desc = document.getElementById('edit-task-desc').value.trim();
+                t.datetime = new Date(document.getElementById('edit-task-date').value).getTime();
+                t.category = document.getElementById('edit-task-category').value;
+                t.priority = document.getElementById('edit-task-priority').value;
+                t.recurrence = document.getElementById('edit-task-recurrence').value;
+                t.showCountdown = document.getElementById('edit-task-countdown-check').checked;
+                t.notified = false; 
+                saveTasks(); renderTasks(); editModal.classList.remove('active');
+            }
+        });
+
+        function renderTasks() {
+            const list = document.getElementById('task-list'); list.innerHTML = '';
+            tasks.sort((a, b) => a.datetime - b.datetime);
+            const grouped = {}; let tTotal = 0; let tComp = 0; const tStr = new Date().toLocaleDateString();
+
+            tasks.forEach(t => {
+                const dStr = new Date(t.datetime).toLocaleDateString();
+                if (!grouped[dStr]) grouped[dStr] = []; grouped[dStr].push(t);
+                if (dStr === tStr) { tTotal++; if (t.completed) tComp++; }
+            });
+
+            document.getElementById('progress-fill').style.width = tTotal === 0 ? '0%' : `${(tComp / tTotal) * 100}%`;
+            document.getElementById('progress-text').textContent = `${tComp}/${tTotal} tasks completed today`;
+
+            const priorityWeights = { 'High': 3, 'Medium': 2, 'Low': 1, 'None': 0, undefined: 0 };
+
+            for (const [date, dTasks] of Object.entries(grouped)) {
+                dTasks.sort((a, b) => {
+                    const weightA = priorityWeights[a.priority] || 0; const weightB = priorityWeights[b.priority] || 0;
+                    if (weightA !== weightB) return weightB - weightA; return a.datetime - b.datetime;
+                });
+
+                const gDiv = document.createElement('div'); gDiv.className = 'task-date-group';
+                const hDiv = document.createElement('div'); hDiv.className = 'task-list-header';
+                
+                const h2 = document.createElement('h2'); h2.className = 'date-header'; h2.textContent = date === tStr ? "Today" : date; hDiv.appendChild(h2);
+                if (new Date(date) < new Date(tStr) && dTasks.some(t => !t.completed)) {
+                    const rBtn = document.createElement('button'); rBtn.className = 'secondary glass'; rBtn.style.cssText = 'font-size:0.75rem; padding:0.3rem 0.6rem; border-radius: 0.5rem;';
+                    rBtn.textContent = 'Roll Over Incomplete'; rBtn.onclick = rolloverTasks; hDiv.appendChild(rBtn);
+                }
+                gDiv.appendChild(hDiv);
+
+                dTasks.forEach(t => {
+                    let priorityClass = t.priority && t.priority !== 'None' ? `priority-${t.priority}` : '';
+                    const tDiv = document.createElement('div'); 
+                    tDiv.className = `task-item glass ${t.completed ? 'completed' : ''} ${priorityClass}`;
+                    
+                    const timeStr = new Date(t.datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const catBadge = t.category && t.category !== 'None' ? `<span class="cat-badge" style="background-color:${stringToColor(t.category)}">${t.category}</span>` : '';
+                    const recurrenceIcon = (t.recurrence && t.recurrence !== 'None') ? `<span title="Repeats ${t.recurrence}">🔁</span>` : '';
+                    
+                    const countdownBadge = (!t.completed && t.showCountdown && globalCountdownEnabled) 
+                        ? `<span class="task-countdown" data-time="${t.datetime}">${formatCountdown(t.datetime)}</span>` : '';
+                    
+                    tDiv.innerHTML = `
+                        <div class="task-info">
+                            <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskComplete(${t.id})">
+                            <div class="task-text-container">
+                                <strong>${t.desc}</strong>
+                                <span class="task-time">${timeStr} ${recurrenceIcon} ${catBadge} ${countdownBadge}</span>
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="small-icon-btn" onclick="openEditModal(${t.id})" title="Edit task">✏️</button>
+                            <button class="small-icon-btn del" onclick="deleteTask(${t.id})" title="Delete task">✖</button>
+                        </div>
+                    `;
+                    gDiv.appendChild(tDiv);
+                });
+                list.appendChild(gDiv);
+            }
+            updateLiveCountdowns();
+        }
+
+        // --- IN-APP TOAST NOTIFICATIONS ---
+        const toastContainer = document.getElementById('toast-container');
+        function showToast(task) {
+            const toast = document.createElement('div'); toast.className = 'toast glass';
+            toast.innerHTML = `<div class="toast-header">🔔 Task Due!</div><div class="toast-body">${task.desc}</div>
+                <div class="toast-actions"><button class="toast-btn done" onclick="completeFromToast(${task.id}, this)">Mark Done</button><button class="toast-btn dismiss" onclick="dismissToast(this)">Dismiss</button></div>`;
+            toastContainer.appendChild(toast);
+        }
+        window.completeFromToast = (id, btn) => { dismissToast(btn); const t = tasks.find(task => task.id === id); if (t && !t.completed) { toggleTaskComplete(id); } };
+        window.dismissToast = (btn) => { const toast = btn.closest('.toast'); toast.style.animation = 'slideOut 0.35s ease-in forwards'; setTimeout(() => toast.remove(), 350); };
+
+        document.getElementById('enable-notif-btn').addEventListener('click', () => { Notification.requestPermission().then(p => { if(p==="granted") alert("Notifications active!"); }); });
+        
+        setInterval(() => {
+            const now = Date.now(); let needsSave = false;
+            tasks.forEach(t => {
+                if (!t.notified && !t.completed && t.datetime <= now) {
+                    if (Notification.permission === "granted") new Notification("Task Due!", { body: t.desc });
+                    showToast(t); t.notified = true; needsSave = true;
+                }
+            });
+            if (needsSave) saveTasks();
+        }, 10000);
+
+        // --- SETTINGS, THEME ---
+        const settingsModal = document.getElementById('settings-modal');
+        document.getElementById('open-settings-btn').addEventListener('click', () => {
+            document.getElementById('name-input').value = userName;
+            document.getElementById('city-input').value = manualCity;
+            settingsModal.classList.add('active');
+        });
+        document.getElementById('close-settings-btn').addEventListener('click', () => settingsModal.classList.remove('active'));
+        
+        document.getElementById('save-settings-btn').addEventListener('click', () => {
+            userName = document.getElementById('name-input').value.trim();
+            manualCity = document.getElementById('city-input').value.trim();
+            localStorage.setItem('dashboard-name', userName);
+            localStorage.setItem('dashboard-city', manualCity);
+            updateClock(); updateWeather(); settingsModal.classList.remove('active');
+        });
+
+        const sysDark = window.matchMedia('(prefers-color-scheme: dark)');
+        function applyTheme(dark) {
+            document.body.classList.toggle('dark-mode', dark);
+            document.getElementById('theme-toggle').textContent = dark ? '☀️ Light Interface' : '🌙 Dark Interface';
+        }
+        const savedTheme = localStorage.getItem('todo-dark-mode');
+        applyTheme(savedTheme !== null ? savedTheme === 'true' : sysDark.matches);
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const isDark = document.body.classList.contains('dark-mode'); applyTheme(!isDark); localStorage.setItem('todo-dark-mode', !isDark);
+        });
+
+        document.getElementById('export-btn').addEventListener('click', () => {
+            if (!tasks.length) return alert("Nothing to backup.");
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({tasks, scratchpad: scratchpad.value, categories: customCategories})]));
+            a.download = `dashboard-backup-${todayDateStr}.json`; document.body.appendChild(a); a.click(); a.remove();
+        });
+        const importFile = document.getElementById('import-file');
+        document.getElementById('import-btn').addEventListener('click', () => importFile.click());
+        importFile.addEventListener('change', e => {
+            const r = new FileReader();
+            r.onload = ev => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (confirm("Restore from backup? Current data will be replaced.")) {
+                        if(Array.isArray(data)) tasks = data; 
+                        else { 
+                            tasks = data.tasks || []; scratchpad.value = data.scratchpad || ''; localStorage.setItem('dashboard-scratchpad', scratchpad.value); 
+                            if(data.categories) { customCategories = data.categories; localStorage.setItem('dashboard-categories', JSON.stringify(customCategories)); renderCategorySettings(); }
+                        }
+                        saveTasks(); renderTasks(); settingsModal.classList.remove('active');
+                    }
+                } catch { alert("Invalid backup file."); }
+            };
+            if (e.target.files[0]) r.readAsText(e.target.files[0]); e.target.value = ''; 
+        });
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            if (confirm("Permanently delete ALL tasks and settings?")) {
+                localStorage.clear(); tasks = []; userName = ''; manualCity = ''; scratchpad.value = '';
+                customCategories = ['Personal', 'Work', 'Study', 'Errands']; renderCategorySettings();
+                timeBgIndex = 0; currentBgSeed = todayDateStr; 
+                applyBackground(); updateClock(); updateWeather(); applyTheme(sysDark.matches); renderTasks(); 
+                settingsModal.classList.remove('active');
+            }
+        });
+
+        renderTasks();
+    </script>
+</body>
+</html>

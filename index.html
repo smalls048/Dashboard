@@ -37,6 +37,10 @@
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+
+            /* Dynamic Layout Variables */
+            --col-left-width: 1.6fr;
+            --col-right-width: 1fr;
         }
 
         body.dark-mode {
@@ -69,7 +73,6 @@
             background-color: var(--bg-overlay); z-index: -1; pointer-events: none; transition: background-color 0.3s ease;
         }
 
-        /* Sleek Custom Scrollbars */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.3); border-radius: 3px; }
@@ -83,23 +86,65 @@
             box-shadow: var(--glass-shadow);
         }
 
-        /* SINGLE PAGE LAYOUT GRID */
+        /* --- ADVANCED CSS GRID LAYOUT --- */
         .app-container {
             max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem;
-            display: grid; grid-template-columns: 1fr; gap: 1.5rem;
-            transition: all 0.5s ease;
+            display: grid; gap: 1.5rem; transition: all 0.5s ease;
+            grid-template-columns: 1fr;
+            grid-template-areas: "nav" "head" "main" "side";
         }
         
+        .top-nav { grid-area: nav; margin-bottom: 0; }
+        .dashboard-header { grid-area: head; margin-bottom: 0; }
+        .main-column { grid-area: main; }
+        .side-column { grid-area: side; }
+
         @media (min-width: 850px) { 
             body { overflow: hidden; } 
-            .app-container { 
-                grid-template-columns: 1.6fr 1fr; 
-                height: 100vh; box-sizing: border-box;
-                grid-template-rows: auto auto 1fr;
-            }
-            .top-nav { grid-column: 1 / -1; margin-bottom: 0; }
-            .dashboard-header { grid-column: 1 / -1; margin-bottom: 0; }
             
+            .app-container { 
+                height: 100vh; box-sizing: border-box;
+                grid-template-columns: var(--col-left-width) var(--col-right-width); 
+                grid-template-rows: auto auto 1fr;
+                /* Default Area Template: Top Header */
+                grid-template-areas: 
+                    "nav nav"
+                    "head head"
+                    "main side";
+            }
+
+            /* Layout: Tasks on Right */
+            .app-container.layout-tasks-right {
+                grid-template-areas: 
+                    "nav nav"
+                    "head head"
+                    "side main";
+            }
+
+            /* Layout: Header in Side Column */
+            .app-container.layout-header-side {
+                grid-template-areas: 
+                    "nav nav"
+                    "main head"
+                    "main side";
+            }
+
+            /* Layout: Header in Side Column AND Tasks on Right */
+            .app-container.layout-tasks-right.layout-header-side {
+                grid-template-areas: 
+                    "nav nav"
+                    "head main"
+                    "side main";
+            }
+
+            /* Layout: Hide Scratchpad completely */
+            .app-container.hide-side {
+                grid-template-areas: 
+                    "nav nav"
+                    "head head"
+                    "main main" !important;
+            }
+
             .main-column { overflow: hidden; display: flex; flex-direction: column; }
             .side-column { overflow: hidden; display: flex; flex-direction: column; }
             #task-list { overflow-y: auto; flex-grow: 1; padding-right: 0.5rem; }
@@ -107,11 +152,25 @@
             #scratchpad { flex-grow: 1; overflow-y: auto; padding-right: 0.5rem; }
         }
 
-        /* ZEN MODE OVERRIDES */
+        /* --- ZEN MODE OVERRIDES --- */
         body.zen-mode .zen-hide { display: none !important; opacity: 0; }
-        body.zen-mode .app-container { grid-template-columns: 1fr; max-width: 650px; }
+        body.zen-mode .app-container { grid-template-columns: 1fr !important; grid-template-areas: "nav" "main"; max-width: 650px; }
         .zen-only { display: none; text-align: center; margin-top: 2rem; padding: 2.5rem; border-radius: 1.25rem; }
         body.zen-mode .zen-only { display: block; animation: fadeIn 1s ease-in-out; }
+        
+        @keyframes breatheGlow {
+            0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.1); border-color: rgba(124, 58, 237, 0.1); }
+            21% { box-shadow: 0 0 25px 10px rgba(124, 58, 237, 0.5); border-color: rgba(124, 58, 237, 0.8); } 
+            58% { box-shadow: 0 0 25px 10px rgba(124, 58, 237, 0.5); border-color: rgba(124, 58, 237, 0.8); } 
+            100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.1); border-color: rgba(124, 58, 237, 0.1); } 
+        }
+        
+        .zen-breathe-container {
+            animation: breatheGlow 19s infinite linear;
+            padding: 2rem; border-radius: 1rem; border: 2px solid transparent;
+            background: rgba(124, 58, 237, 0.03); margin-top: 1rem;
+        }
+
         .zen-task-title { font-size: 2.25rem; font-weight: bold; margin-bottom: 0.25rem; color: var(--text); }
         .zen-task-time { font-size: 1.1rem; color: var(--text-muted); font-weight: 500; }
         .zen-task-countdown { font-size: 3.5rem; font-weight: 800; margin: 1rem 0; color: var(--primary); font-variant-numeric: tabular-nums; line-height: 1; }
@@ -123,59 +182,60 @@
 
         .pomodoro {
             display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 1.25rem;
-            border-radius: 2rem; font-weight: bold; color: var(--text);
-            box-shadow: var(--shadow-md);
+            border-radius: 2rem; font-weight: bold; color: var(--text); box-shadow: var(--shadow-md);
         }
         
         .pomo-btn, .icon-btn, .close-modal, .small-icon-btn {
-            background: none; border: none; padding: 0;
-            box-shadow: none !important; outline: none !important;
+            background: none; border: none; padding: 0; box-shadow: none !important; outline: none !important;
             cursor: pointer; transition: transform 0.2s ease, color 0.2s ease;
         }
-        
         .pomo-btn { font-size: 1.15rem; color: var(--text); padding: 0 0.2rem; }
         .pomo-btn:hover { transform: scale(1.1); }
-
         .icon-btn { font-size: 1.5rem; color: var(--header-text); text-shadow: var(--header-shadow); }
         .icon-btn:hover { transform: translateY(-2px) rotate(5deg); color: var(--primary); }
 
-        .dashboard-header { text-align: center; margin-bottom: 2rem; color: var(--header-text); text-shadow: var(--header-shadow); }
-        .greeting { font-size: 1.5rem; font-weight: 500; margin: 0 0 0.25rem 0; opacity: 0.95; letter-spacing: -0.5px; }
-        .clock { font-size: 4rem; font-weight: 800; letter-spacing: -2px; margin: 0; line-height: 1; }
-        .weather { font-size: 1.1rem; margin-top: 0.5rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--header-text); }
+        .dashboard-header { text-align: center; margin-bottom: 1.5rem; color: var(--header-text); text-shadow: var(--header-shadow); transition: all 0.3s ease; }
+        .greeting { font-size: 1.5rem; font-weight: 500; margin: 0 0 0.25rem 0; opacity: 0.95; letter-spacing: -0.5px; transition: all 0.3s ease; }
+        .clock { font-size: 4rem; font-weight: 800; letter-spacing: -2px; margin: 0; line-height: 1; transition: all 0.3s ease; }
+        .weather { font-size: 1.1rem; margin-top: 0.5rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--header-text); transition: all 0.3s ease; }
+
+        /* Compact Header (For when it's placed over the Scratchpad) */
+        .compact-header { margin-bottom: 0.5rem; margin-top: -0.5rem; }
+        .compact-header .clock { font-size: 3.25rem; letter-spacing: -1.5px; }
+        .compact-header .greeting { font-size: 1.2rem; }
+        .compact-header .weather { font-size: 1rem; }
 
         /* --- BUTTONS --- */
         button {
-            background-color: var(--primary); color: white; border: none; padding: 0.75rem 1.5rem;
-            border-radius: 1rem; cursor: pointer; font-weight: 600; font-family: inherit; transition: all 0.2s; font-size: 0.95rem;
-            box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);
+            background-color: var(--primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 1rem; 
+            cursor: pointer; font-weight: 600; font-family: inherit; transition: all 0.2s; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);
         }
         button:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 6px 10px -1px rgba(124, 58, 237, 0.3); }
         button:active { transform: translateY(0); box-shadow: 0 2px 4px -1px rgba(124, 58, 237, 0.2); }
         
         button.secondary { background-color: transparent; color: var(--text); border: 1.5px solid var(--border); box-shadow: none; }
         button.secondary:hover { background-color: var(--primary-light); border-color: var(--primary); color: var(--primary); box-shadow: none; transform: none; }
-
         button.danger-outline { background-color: transparent; color: var(--danger); border: 1.5px solid var(--danger); box-shadow: none; }
         button.danger-outline:hover { background-color: var(--danger); color: white; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2); transform: none; }
-
         .close-modal:active, .icon-btn:active, .pomo-btn:active, .small-icon-btn:active { transform: none; }
 
-        /* --- INPUT GROUPS --- */
-        .input-group { padding: 1.25rem 1.5rem; border-radius: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
+        /* --- INPUT GROUPS & SEARCH --- */
+        .input-group { padding: 1.25rem 1.5rem; border-radius: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem; }
         .input-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
         .input-row > * { flex: 1; min-width: 140px; }
         .input-row input[type="datetime-local"] { flex: 2; min-width: 200px; }
         
-        select, input[type="text"], input[type="datetime-local"] {
+        select, input[type="text"], input[type="datetime-local"], textarea {
             padding: 0.7rem 1rem; border: 2px solid var(--border); border-radius: 1rem;
-            font-size: 0.95rem; font-family: inherit; background-color: rgba(255, 255, 255, 0.03); color: var(--text); font-weight: 500; width: 100%; box-sizing: border-box;
-            transition: all 0.2s ease;
+            font-size: 0.95rem; font-family: inherit; background-color: rgba(255, 255, 255, 0.03); color: var(--text); font-weight: 500; width: 100%; box-sizing: border-box; transition: all 0.2s ease;
         }
         select option { background-color: var(--card-bg); color: var(--text); }
-        input::placeholder { color: var(--text-muted); font-weight: 400; opacity: 0.7; }
-        
-        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15); background-color: rgba(255, 255, 255, 0.06); }
+        input::placeholder, textarea::placeholder { color: var(--text-muted); font-weight: 400; opacity: 0.7; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15); background-color: rgba(255, 255, 255, 0.06); }
+
+        .search-bar-container { display: flex; align-items: center; background-color: var(--card-bg); padding: 0.5rem 1rem; border-radius: 1rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+        .search-bar-container input { border: none; background: transparent; padding: 0; box-shadow: none; font-weight: 400; }
+        .search-bar-container input:focus { box-shadow: none; }
 
         .checkbox-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.5rem; }
         .checkbox-row input[type="checkbox"] { width: 1.1rem; height: 1.1rem; accent-color: var(--primary); cursor: pointer; }
@@ -186,7 +246,8 @@
         /* --- SCRATCHPAD --- */
         .scratchpad-container { padding: 1.5rem; border-radius: 1.25rem; }
         .scratchpad-container h3 { margin-top: 0; font-size: 1.1rem; color: var(--primary); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
-        textarea { background: transparent; border: none; resize: none; color: var(--text); font-family: inherit; font-size: 1rem; line-height: 1.6; outline: none; padding-top: 0.25rem; }
+        #scratchpad { border: none; padding-top: 0.25rem; }
+        #scratchpad:focus { box-shadow: none; background-color: transparent; }
 
         /* --- TASK LIST & PROGRESS --- */
         .progress-bar-bg { width: 100%; height: 8px; background-color: rgba(128, 128, 128, 0.1); border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem; border: 1px solid var(--border); }
@@ -198,27 +259,33 @@
         .task-date-group { margin-top: 1.5rem; }
         .task-date-group:first-child { margin-top: 0; }
         
-        .task-item { padding: 1rem 1.25rem; border-radius: 1rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; transition: all 0.2s; border-left: none; }
+        .task-item { padding: 1rem 1.25rem; border-radius: 1rem; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; transition: all 0.2s; border-left: none; }
         
         .priority-High { border: 1px solid rgba(239, 68, 68, 0.2); box-shadow: 0 4px 15px -2px rgba(239, 68, 68, 0.15); }
-        .priority-High strong { color: #ef4444; }
-        body.dark-mode .priority-High strong { color: #f87171; }
+        .priority-High strong { color: #ef4444; } body.dark-mode .priority-High strong { color: #f87171; }
         .priority-Medium { border: 1px solid rgba(245, 158, 11, 0.2); box-shadow: 0 4px 15px -2px rgba(245, 158, 11, 0.1); }
         .priority-Low { border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 4px 15px -2px rgba(59, 130, 246, 0.1); }
 
         .task-item.completed { opacity: 0.45; border: 1px solid var(--border) !important; box-shadow: none !important; }
         .task-item.completed strong { text-decoration: line-through; color: var(--text-muted) !important; }
 
-        .task-info { display: flex; align-items: center; gap: 1rem; }
-        input[type="checkbox"] { width: 1.25rem; height: 1.25rem; cursor: pointer; accent-color: var(--primary); border-radius: 0.35rem; }
-        .task-text-container { display: flex; flex-direction: column; gap: 0.15rem; }
+        .task-info { display: flex; align-items: flex-start; gap: 1rem; width: 100%; }
+        input[type="checkbox"].main-check { width: 1.3rem; height: 1.3rem; cursor: pointer; accent-color: var(--primary); border-radius: 0.35rem; margin-top: 0.15rem; }
+        
+        .task-text-container { display: flex; flex-direction: column; gap: 0.15rem; width: 100%; }
         .task-text-container strong { font-size: 1rem; }
         .task-time { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
         
         .cat-badge { padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
-
         .task-countdown { background-color: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); padding: 1px 6px; border-radius: 6px; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-        .task-actions { display: flex; gap: 0.25rem; }
+        
+        .subtasks-container { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; padding-left: 0.25rem; border-left: 2px solid var(--border); margin-left: 0.25rem; }
+        .subtask-row { display: flex; align-items: center; gap: 0.5rem; }
+        .subtask-row input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--primary); cursor: pointer; }
+        .subtask-text { font-size: 0.85rem; color: var(--text); }
+        .subtask-text.done { text-decoration: line-through; color: var(--text-muted); opacity: 0.7; }
+
+        .task-actions { display: flex; gap: 0.25rem; margin-left: 1rem; }
         .small-icon-btn { color: var(--text-muted); padding: 0.3rem 0.5rem; font-size: 1rem; border-radius: 0.5rem; transition: all 0.2s; }
         .small-icon-btn:hover { color: var(--text); background: rgba(128,128,128,0.15); transform: none; }
         .small-icon-btn.del:hover { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); }
@@ -249,7 +316,7 @@
 </head>
 <body>
 
-    <div class="app-container">
+    <div class="app-container layout-default" id="main-app-container">
         <div class="top-nav zen-hide">
             <div class="pomodoro glass">
                 <span>⏱️</span>
@@ -265,7 +332,7 @@
             </div>
         </div>
 
-        <div class="dashboard-header zen-hide">
+        <div class="dashboard-header zen-hide" id="dynamic-header">
             <h2 class="greeting" id="greeting">Good Morning</h2>
             <h1 class="clock" id="clock">00:00</h1>
             <div class="weather" id="weather">Fetching weather...</div>
@@ -282,6 +349,8 @@
                         <select id="task-category" title="Category"></select>
                     </div>
                     
+                    <textarea id="task-subtasks" placeholder="Subtasks (Optional). Press Enter for new subtask..." rows="2" style="resize: vertical;"></textarea>
+
                     <div class="input-row">
                         <select id="task-priority" title="Priority Level">
                             <option value="None">No Priority</option>
@@ -306,6 +375,11 @@
                 </div>
             </div>
 
+            <div class="search-bar-container glass">
+                <span style="opacity: 0.5; margin-right: 0.5rem;">🔍</span>
+                <input type="text" id="task-search" placeholder="Search or filter tasks...">
+            </div>
+
             <div>
                 <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
                 <div class="progress-text" id="progress-text">0/0 tasks completed today</div>
@@ -323,7 +397,7 @@
 
         <div class="zen-only glass" id="zen-view">
             <p style="color: var(--text-muted); font-weight: bold; margin-top: 0; text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem;">Focusing On</p>
-            <div id="zen-task-content"></div>
+            <div id="zen-task-content" class="zen-breathe-container"></div>
             <button class="secondary" id="exit-zen-btn" style="margin-top: 2.5rem; width: 100%;">Exit Focus Mode</button>
         </div>
     </div>
@@ -362,17 +436,25 @@
 
                 <div class="settings-divider"></div>
 
-                <label class="settings-label">Countdowns & Alerts</label>
-                <button id="global-countdown-toggle" class="secondary" style="width: 100%; text-align: left;">⏳ Global Countdowns: OFF</button>
-                <button id="auto-countdown-toggle" class="secondary" style="width: 100%; text-align: left; display: none;">⚙️ Auto-enable on new tasks: OFF</button>
-                <button id="enable-notif-btn" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">🔔 Request Desktop Notifications</button>
-                <button id="sound-toggle" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">🔊 Sound Effects: ON</button>
-                
+                <label class="settings-label">Layout & Workspace</label>
+                <button id="layout-order-toggle" class="secondary" style="width: 100%; text-align: left;">↔️ Position: Tasks on Left</button>
+                <button id="layout-header-toggle" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">⬆️ Header: Top (Full Width)</button>
+                <button id="layout-width-toggle" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">🔀 Sizing: Wide Task List</button>
+                <button id="layout-hide-toggle" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">👁️ Scratchpad: Visible</button>
+
                 <div class="settings-divider"></div>
 
                 <label class="settings-label">Appearance</label>
-                <button id="theme-toggle" class="secondary" style="width: 100%; text-align: left;">☀️ Interface Theme</button>
+                <button id="theme-toggle" class="secondary" style="width: 100%; text-align: left;">💻 Interface Theme: Auto</button>
                 <button id="time-bg-toggle" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">🌅 Time-Based Wallpapers: OFF</button>
+
+                <div class="settings-divider"></div>
+
+                <label class="settings-label">Countdowns & Alerts</label>
+                <button id="global-countdown-toggle" class="secondary" style="width: 100%; text-align: left;">⏳ Global Countdowns: OFF</button>
+                <button id="auto-countdown-toggle" class="secondary" style="width: 100%; text-align: left; display: none; border-top: none; border-radius: 0 0 1rem 1rem;">⚙️ Auto-enable on new tasks: OFF</button>
+                <button id="enable-notif-btn" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">🔔 Request Desktop Notifications</button>
+                <button id="sound-toggle" class="secondary" style="width: 100%; text-align: left; margin-top: 1rem;">🔊 Sound Effects: ON</button>
                 
                 <div class="settings-divider"></div>
                 
@@ -381,7 +463,7 @@
                     <button id="import-btn" class="secondary" style="flex: 1;">📂 Restore</button>
                     <input type="file" id="import-file" accept=".json" style="display: none;">
                 </div>
-                <button id="reset-btn" class="danger-outline" style="width: 100%;">🗑️ Reset All Data</button>
+                <button id="reset-btn" class="danger-outline" style="width: 100%; margin-top: 1rem;">🗑️ Reset All Data</button>
             </div>
         </div>
     </div>
@@ -409,6 +491,11 @@
                         <label class="settings-label">Category</label>
                         <select id="edit-task-category"></select>
                     </div>
+                </div>
+
+                <div>
+                    <label class="settings-label">Subtasks</label>
+                    <textarea id="edit-task-subtasks" placeholder="One subtask per line..." rows="2" style="resize: vertical;"></textarea>
                 </div>
                 
                 <div class="input-row">
@@ -443,7 +530,7 @@
     </div>
 
     <script>
-        // --- STATE & INITIALIZATION (MOVED TO VERY TOP TO PREVENT ERRORS) ---
+        // --- STATE & INITIALIZATION ---
         const todayDateStr = new Date().toISOString().split('T')[0];
         let currentBgSeed = localStorage.getItem('bg-seed') || todayDateStr;
         let userName = localStorage.getItem('dashboard-name') || '';
@@ -453,35 +540,105 @@
         let globalCountdownEnabled = localStorage.getItem('dashboard-countdowns') === 'true';
         let autoCountdownEnabled = localStorage.getItem('dashboard-auto-countdown') === 'true';
         let timeBasedBgEnabled = localStorage.getItem('dashboard-time-bg') === 'true';
+        let dashboardTheme = localStorage.getItem('dashboard-theme') || 'Auto'; 
         
+        // Modular Layout State
+        let tasksRight = localStorage.getItem('layout-tasks-right') === 'true';
+        let headerInSide = localStorage.getItem('layout-header-side') === 'true';
+        let wideScratchpad = localStorage.getItem('layout-wide-scratchpad') === 'true';
+        let hideScratchpad = localStorage.getItem('layout-hide-scratchpad') === 'true';
+
         let lastKnownTimeBlock = ''; 
         let timeBgIndex = parseInt(localStorage.getItem('time-bg-index')) || 0; 
         
         let isZenMode = false;
         let zenNextTaskTime = null; 
 
-        // Safe JSON parsing for user data
         let tasks = [];
         try { const t = JSON.parse(localStorage.getItem('todo-tasks')); if (Array.isArray(t)) tasks = t; } catch(e) {}
         
         let customCategories = ['Personal', 'Work', 'Study', 'Errands'];
         try { const c = JSON.parse(localStorage.getItem('dashboard-categories')); if (Array.isArray(c)) customCategories = c; } catch(e) {}
 
-        // --- CUSTOM CATEGORIES & TAGS ---
+        // --- LAYOUT MANAGER ---
+        function applyLayout() {
+            const appContainer = document.getElementById('main-app-container');
+            const header = document.getElementById('dynamic-header');
+
+            // Apply CSS Grid Area Classes
+            appContainer.classList.remove('layout-tasks-right', 'layout-header-side', 'hide-side');
+            
+            if (hideScratchpad) {
+                appContainer.classList.add('hide-side');
+                document.documentElement.style.setProperty('--col-left-width', '1fr');
+                document.documentElement.style.setProperty('--col-right-width', '0px');
+                document.querySelector('.side-column').style.display = 'none';
+                header.classList.remove('compact-header');
+            } else {
+                document.querySelector('.side-column').style.display = 'flex';
+                
+                if (tasksRight) appContainer.classList.add('layout-tasks-right');
+                if (headerInSide) appContainer.classList.add('layout-header-side');
+                
+                let taskWidth = wideScratchpad ? '1fr' : '1.6fr';
+                let scratchpadWidth = wideScratchpad ? '1.6fr' : '1fr';
+                document.documentElement.style.setProperty('--col-left-width', tasksRight ? scratchpadWidth : taskWidth);
+                document.documentElement.style.setProperty('--col-right-width', tasksRight ? taskWidth : scratchpadWidth);
+
+                if (headerInSide) {
+                    header.classList.add('compact-header');
+                } else {
+                    header.classList.remove('compact-header');
+                }
+            }
+
+            // Update UI Toggles
+            document.getElementById('layout-order-toggle').textContent = tasksRight ? '↔️ Position: Tasks on Right' : '↔️ Position: Tasks on Left';
+            document.getElementById('layout-header-toggle').textContent = headerInSide ? '⬆️ Header: Over Scratchpad' : '⬆️ Header: Top (Full Width)';
+            document.getElementById('layout-width-toggle').textContent = wideScratchpad ? '🔀 Sizing: Wide Scratchpad' : '🔀 Sizing: Wide Task List';
+            document.getElementById('layout-hide-toggle').textContent = hideScratchpad ? '👁️ Scratchpad: Hidden' : '👁️ Scratchpad: Visible';
+        }
+
+        document.getElementById('layout-order-toggle').addEventListener('click', () => { tasksRight = !tasksRight; localStorage.setItem('layout-tasks-right', tasksRight); applyLayout(); });
+        document.getElementById('layout-header-toggle').addEventListener('click', () => { headerInSide = !headerInSide; localStorage.setItem('layout-header-side', headerInSide); applyLayout(); });
+        document.getElementById('layout-width-toggle').addEventListener('click', () => { wideScratchpad = !wideScratchpad; localStorage.setItem('layout-wide-scratchpad', wideScratchpad); applyLayout(); });
+        document.getElementById('layout-hide-toggle').addEventListener('click', () => { hideScratchpad = !hideScratchpad; localStorage.setItem('layout-hide-scratchpad', hideScratchpad); applyLayout(); });
+        applyLayout();
+
+        // --- THEME MANAGEMENT ---
+        const sysDarkMedia = window.matchMedia('(prefers-color-scheme: dark)');
+        function applyTheme() {
+            let isDark = false;
+            const toggleBtn = document.getElementById('theme-toggle');
+            if (dashboardTheme === 'Auto') {
+                isDark = sysDarkMedia.matches;
+                toggleBtn.textContent = '💻 Interface Theme: Auto';
+            } else {
+                isDark = (dashboardTheme === 'Dark');
+                toggleBtn.textContent = isDark ? '🌙 Interface Theme: Dark' : '☀️ Interface Theme: Light';
+            }
+            document.body.classList.toggle('dark-mode', isDark);
+        }
+        applyTheme(); 
+        sysDarkMedia.addEventListener('change', () => { if (dashboardTheme === 'Auto') applyTheme(); });
+
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            if (dashboardTheme === 'Auto') dashboardTheme = 'Light';
+            else if (dashboardTheme === 'Light') dashboardTheme = 'Dark';
+            else dashboardTheme = 'Auto';
+            localStorage.setItem('dashboard-theme', dashboardTheme); applyTheme();
+        });
+
+        // --- CUSTOM CATEGORIES ---
         function stringToColor(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            const h = Math.abs(hash % 360);
-            return `hsl(${h}, 65%, 45%)`; 
+            let hash = 0; for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            return `hsl(${Math.abs(hash % 360)}, 65%, 45%)`; 
         }
 
         function renderCategorySettings() {
-            const list = document.getElementById('category-list');
-            list.innerHTML = '';
+            const list = document.getElementById('category-list'); list.innerHTML = '';
             customCategories.forEach((cat, index) => {
-                const span = document.createElement('span');
-                span.className = 'cat-badge';
-                span.style.backgroundColor = stringToColor(cat);
+                const span = document.createElement('span'); span.className = 'cat-badge'; span.style.backgroundColor = stringToColor(cat);
                 span.style.display = 'flex'; span.style.alignItems = 'center'; span.style.gap = '6px'; span.style.fontSize = '0.75rem';
                 span.innerHTML = `${cat} <span style="cursor:pointer; font-weight:bold; font-size:0.9rem;" onclick="deleteCategory(${index})">&times;</span>`;
                 list.appendChild(span);
@@ -498,18 +655,15 @@
         }
 
         window.deleteCategory = (idx) => {
-            customCategories.splice(idx, 1);
-            localStorage.setItem('dashboard-categories', JSON.stringify(customCategories));
+            customCategories.splice(idx, 1); localStorage.setItem('dashboard-categories', JSON.stringify(customCategories));
             renderCategorySettings(); renderTasks(); 
         };
 
         document.getElementById('add-category-btn').addEventListener('click', () => {
             const val = document.getElementById('new-category-input').value.trim();
             if(val && !customCategories.includes(val)) {
-                customCategories.push(val);
-                localStorage.setItem('dashboard-categories', JSON.stringify(customCategories));
-                document.getElementById('new-category-input').value = '';
-                renderCategorySettings();
+                customCategories.push(val); localStorage.setItem('dashboard-categories', JSON.stringify(customCategories));
+                document.getElementById('new-category-input').value = ''; renderCategorySettings();
             }
         });
         renderCategorySettings(); 
@@ -519,8 +673,7 @@
             if (!soundEnabled) return;
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
                 osc.connect(gain); gain.connect(ctx.destination);
                 osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime); 
                 gain.gain.setValueAtTime(0.08, ctx.currentTime); 
@@ -545,7 +698,6 @@
         function updateGlobalCountdownUI() {
             countdownToggleBtn.textContent = globalCountdownEnabled ? '⏳ Global Countdowns: ON' : '⏳ Global Countdowns: OFF';
             countdownRows.forEach(row => row.style.display = globalCountdownEnabled ? 'flex' : 'none');
-            
             autoCountdownToggleBtn.style.display = globalCountdownEnabled ? 'block' : 'none';
             autoCountdownToggleBtn.textContent = autoCountdownEnabled ? '⚙️ Auto-enable on new tasks: ON' : '⚙️ Auto-enable on new tasks: OFF';
             document.getElementById('task-countdown-check').checked = (globalCountdownEnabled && autoCountdownEnabled);
@@ -797,7 +949,7 @@
         zenToggleBtn.addEventListener('click', toggleZenMode);
         exitZenBtn.addEventListener('click', toggleZenMode);
 
-        // --- DYNAMIC TASK INPUT ---
+        // --- DYNAMIC TASK INPUT & SEARCH ---
         const taskDescInput = document.getElementById('task-desc');
         const advOptions = document.getElementById('advanced-task-options');
 
@@ -809,8 +961,16 @@
             }
         });
 
-        // --- TASK LOGIC ---
+        const searchInput = document.getElementById('task-search');
+        searchInput.addEventListener('input', renderTasks);
+
+        // --- TASK LOGIC & SUBTASKS ---
         function saveTasks() { localStorage.setItem('todo-tasks', JSON.stringify(tasks)); if(isZenMode) updateZenView(); }
+
+        function parseSubtasks(text) {
+            if (!text.trim()) return [];
+            return text.split('\n').filter(line => line.trim() !== '').map(line => ({ desc: line.trim(), completed: false }));
+        }
 
         document.getElementById('add-task-btn').addEventListener('click', () => {
             const desc = taskDescInput.value.trim();
@@ -819,16 +979,20 @@
             const prioVal = document.getElementById('task-priority').value;
             const recVal = document.getElementById('task-recurrence').value;
             const showCountdown = document.getElementById('task-countdown-check').checked;
+            const subtasksVal = document.getElementById('task-subtasks').value;
             
             if (!desc || !dateVal) return alert("Please enter task details and a valid date.");
+            
             tasks.push({ 
                 id: Date.now(), desc, datetime: new Date(dateVal).getTime(), 
                 category: catVal, priority: prioVal, recurrence: recVal, 
-                showCountdown: showCountdown, notified: false, completed: false, spawnedNext: false 
+                showCountdown: showCountdown, subtasks: parseSubtasks(subtasksVal),
+                notified: false, completed: false, spawnedNext: false 
             });
             
             saveTasks(); renderTasks();
-            taskDescInput.value = ''; document.getElementById('task-date').value = '';
+            
+            taskDescInput.value = ''; document.getElementById('task-date').value = ''; document.getElementById('task-subtasks').value = '';
             document.getElementById('task-countdown-check').checked = (globalCountdownEnabled && autoCountdownEnabled);
             advOptions.style.opacity = '0'; setTimeout(() => advOptions.style.display = 'none', 300);
         });
@@ -841,12 +1005,35 @@
             else if (task.recurrence === 'Weekly') nextDate.setDate(nextDate.getDate() + 7);
             else if (task.recurrence === 'Monthly') nextDate.setMonth(nextDate.getMonth() + 1);
 
+            const freshSubtasks = task.subtasks ? task.subtasks.map(st => ({ desc: st.desc, completed: false })) : [];
+
             tasks.push({
                 id: Date.now() + Math.floor(Math.random() * 1000), desc: task.desc, datetime: nextDate.getTime(),
-                category: task.category, priority: task.priority, recurrence: task.recurrence, showCountdown: task.showCountdown,
+                category: task.category, priority: task.priority, recurrence: task.recurrence, 
+                showCountdown: task.showCountdown, subtasks: freshSubtasks,
                 notified: false, completed: false, spawnedNext: false
             });
         }
+
+        window.toggleSubtask = (taskId, subtaskIdx) => {
+            const t = tasks.find(t => t.id === taskId);
+            if (t && t.subtasks[subtaskIdx]) {
+                t.subtasks[subtaskIdx].completed = !t.subtasks[subtaskIdx].completed;
+                saveTasks(); renderTasks();
+            }
+        };
+
+        window.handleMainCheckboxClick = (e, id) => {
+            const t = tasks.find(t => t.id === id);
+            const hasUnfinishedSubtasks = t.subtasks && t.subtasks.some(st => !st.completed);
+            
+            if (!t.completed && hasUnfinishedSubtasks) {
+                e.preventDefault(); 
+                alert("Please complete all subtasks first!");
+                return false;
+            }
+            toggleTaskComplete(id);
+        };
 
         window.toggleTaskComplete = id => {
             const t = tasks.find(t => t.id === id);
@@ -871,13 +1058,18 @@
         window.openEditModal = id => {
             const t = tasks.find(t => t.id === id);
             if(t) {
-                document.getElementById('edit-task-id').value = t.id; document.getElementById('edit-task-desc').value = t.desc;
+                document.getElementById('edit-task-id').value = t.id;
+                document.getElementById('edit-task-desc').value = t.desc;
                 const d = new Date(t.datetime); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
                 document.getElementById('edit-task-date').value = d.toISOString().slice(0,16);
                 document.getElementById('edit-task-category').value = t.category || "None";
                 document.getElementById('edit-task-priority').value = t.priority || "None";
                 document.getElementById('edit-task-recurrence').value = t.recurrence || "None";
                 document.getElementById('edit-task-countdown-check').checked = t.showCountdown || false;
+                
+                const stText = t.subtasks ? t.subtasks.map(st => st.desc).join('\n') : '';
+                document.getElementById('edit-task-subtasks').value = stText;
+                
                 editModal.classList.add('active');
             }
         };
@@ -893,6 +1085,14 @@
                 t.priority = document.getElementById('edit-task-priority').value;
                 t.recurrence = document.getElementById('edit-task-recurrence').value;
                 t.showCountdown = document.getElementById('edit-task-countdown-check').checked;
+                
+                const newSubtaskText = document.getElementById('edit-task-subtasks').value;
+                const newSubtasksRaw = parseSubtasks(newSubtaskText);
+                t.subtasks = newSubtasksRaw.map(newSt => {
+                    const existing = (t.subtasks || []).find(oldSt => oldSt.desc === newSt.desc);
+                    return existing ? existing : newSt;
+                });
+
                 t.notified = false; 
                 saveTasks(); renderTasks(); editModal.classList.remove('active');
             }
@@ -900,13 +1100,21 @@
 
         function renderTasks() {
             const list = document.getElementById('task-list'); list.innerHTML = '';
-            tasks.sort((a, b) => a.datetime - b.datetime);
+            
+            const searchQuery = searchInput.value.toLowerCase().trim();
+            const filteredTasks = tasks.filter(t => t.desc.toLowerCase().includes(searchQuery));
+            
+            filteredTasks.sort((a, b) => a.datetime - b.datetime);
             const grouped = {}; let tTotal = 0; let tComp = 0; const tStr = new Date().toLocaleDateString();
 
             tasks.forEach(t => {
                 const dStr = new Date(t.datetime).toLocaleDateString();
-                if (!grouped[dStr]) grouped[dStr] = []; grouped[dStr].push(t);
                 if (dStr === tStr) { tTotal++; if (t.completed) tComp++; }
+            });
+
+            filteredTasks.forEach(t => {
+                const dStr = new Date(t.datetime).toLocaleDateString();
+                if (!grouped[dStr]) grouped[dStr] = []; grouped[dStr].push(t);
             });
 
             document.getElementById('progress-fill').style.width = tTotal === 0 ? '0%' : `${(tComp / tTotal) * 100}%`;
@@ -915,6 +1123,7 @@
             const priorityWeights = { 'High': 3, 'Medium': 2, 'Low': 1, 'None': 0, undefined: 0 };
 
             for (const [date, dTasks] of Object.entries(grouped)) {
+                
                 dTasks.sort((a, b) => {
                     const weightA = priorityWeights[a.priority] || 0; const weightB = priorityWeights[b.priority] || 0;
                     if (weightA !== weightB) return weightB - weightA; return a.datetime - b.datetime;
@@ -942,12 +1151,27 @@
                     const countdownBadge = (!t.completed && t.showCountdown && globalCountdownEnabled) 
                         ? `<span class="task-countdown" data-time="${t.datetime}">${formatCountdown(t.datetime)}</span>` : '';
                     
+                    let subtasksHtml = '';
+                    if (t.subtasks && t.subtasks.length > 0 && !t.completed) {
+                        subtasksHtml = '<div class="subtasks-container">';
+                        t.subtasks.forEach((st, idx) => {
+                            subtasksHtml += `
+                                <div class="subtask-row">
+                                    <input type="checkbox" ${st.completed ? 'checked' : ''} onchange="toggleSubtask(${t.id}, ${idx})">
+                                    <span class="subtask-text ${st.completed ? 'done' : ''}">${st.desc}</span>
+                                </div>
+                            `;
+                        });
+                        subtasksHtml += '</div>';
+                    }
+
                     tDiv.innerHTML = `
                         <div class="task-info">
-                            <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskComplete(${t.id})">
+                            <input type="checkbox" class="main-check" ${t.completed ? 'checked' : ''} onclick="return handleMainCheckboxClick(event, ${t.id})">
                             <div class="task-text-container">
                                 <strong>${t.desc}</strong>
                                 <span class="task-time">${timeStr} ${recurrenceIcon} ${catBadge} ${countdownBadge}</span>
+                                ${subtasksHtml}
                             </div>
                         </div>
                         <div class="task-actions">
@@ -986,7 +1210,7 @@
             if (needsSave) saveTasks();
         }, 10000);
 
-        // --- SETTINGS, THEME ---
+        // --- SETTINGS ---
         const settingsModal = document.getElementById('settings-modal');
         document.getElementById('open-settings-btn').addEventListener('click', () => {
             document.getElementById('name-input').value = userName;
@@ -1003,17 +1227,7 @@
             updateClock(); updateWeather(); settingsModal.classList.remove('active');
         });
 
-        const sysDark = window.matchMedia('(prefers-color-scheme: dark)');
-        function applyTheme(dark) {
-            document.body.classList.toggle('dark-mode', dark);
-            document.getElementById('theme-toggle').textContent = dark ? '☀️ Light Interface' : '🌙 Dark Interface';
-        }
-        const savedTheme = localStorage.getItem('todo-dark-mode');
-        applyTheme(savedTheme !== null ? savedTheme === 'true' : sysDark.matches);
-        document.getElementById('theme-toggle').addEventListener('click', () => {
-            const isDark = document.body.classList.contains('dark-mode'); applyTheme(!isDark); localStorage.setItem('todo-dark-mode', !isDark);
-        });
-
+        // Backup/Restore/Reset
         document.getElementById('export-btn').addEventListener('click', () => {
             if (!tasks.length) return alert("Nothing to backup.");
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({tasks, scratchpad: scratchpad.value, categories: customCategories})]));
@@ -1042,8 +1256,9 @@
             if (confirm("Permanently delete ALL tasks and settings?")) {
                 localStorage.clear(); tasks = []; userName = ''; manualCity = ''; scratchpad.value = '';
                 customCategories = ['Personal', 'Work', 'Study', 'Errands']; renderCategorySettings();
-                timeBgIndex = 0; currentBgSeed = todayDateStr; 
-                applyBackground(); updateClock(); updateWeather(); applyTheme(sysDark.matches); renderTasks(); 
+                timeBgIndex = 0; currentBgSeed = todayDateStr; dashboardTheme = 'Auto';
+                tasksRight = false; headerInSide = false; wideScratchpad = false; hideScratchpad = false;
+                applyLayout(); applyBackground(); updateClock(); updateWeather(); applyTheme(); renderTasks(); 
                 settingsModal.classList.remove('active');
             }
         });

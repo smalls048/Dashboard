@@ -17,5 +17,5 @@ You can download the latest compiled version of Personal Dashboard Pro directly 
 
 👉 **[Download the Latest Release Here](https://github.com/smalls048/Dashboard/releases/latest)**
 
-##Note:
+## Note:
 Notifications may not trigger initially and a request will instead be sent to the notification centre, allow it there and the app should work.

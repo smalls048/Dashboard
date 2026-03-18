@@ -19,7 +19,7 @@ You can download the latest compiled version of Personal Dashboard Pro directly 
 
 Then just copy and paste the App into the Applications Folder
 
-Alternatively, the app can be used inside chrome (no Safari Support) [here](https://smalls048.github.io/Dashboard/)
+Alternatively, the app can be used inside chrome (no Safari Support as backgrounds don't load) [here](https://smalls048.github.io/Dashboard/)
 
 ## Note:
 Notifications may not trigger initially and a request will instead be sent to the notification centre, allow it there and the app should work.
